@@ -41,8 +41,9 @@ export const Dashboard = () => {
   const [categoryId, setCategoryId] = useState("")
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(10)
-  const [filterInitialDate, setFilterInitialDate] = useState<string>("")
-  const [filterFinalDate, setFilterFinalDate] = useState<string>("")
+  const dateAtual = new Date()
+  const [filterInitialDate, setFilterInitialDate] = useState<string>(Date.now() ? new Date(dateAtual.getFullYear(), dateAtual.getMonth(), 1).toISOString().split('T')[0] : "")
+  const [filterFinalDate, setFilterFinalDate] = useState<string>(Date.now() ? new Date(dateAtual.getFullYear(), dateAtual.getMonth() + 1, 0).toISOString().split('T')[0] : "")
   const fetchData = async () => {
     try {
       setIsLoading(true)
