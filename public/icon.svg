@@ -1,0 +1,13 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="55" fill="#0F172A"/>
+
+  <!-- Chart line -->
+  <path d="M30 75 L50 55 L65 65 L90 40" stroke="#22C55E" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Arrow up -->
+  <path d="M85 40 L90 40 L90 45" stroke="#22C55E" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Dollar symbol -->
+  <text x="60" y="75" text-anchor="middle" fill="#FFFFFF" font-size="28" font-family="Arial" font-weight="bold">$</text>
+</svg>

@@ -1,20 +1,47 @@
-import { Button } from "@/components/ui/button"
+import { Routes, Route, Navigate } from "react-router-dom"
+import { useAuth } from "./contexts/AuthContext"
+import { Login } from "./pages/Login"
+
+import { Layout } from "./components/Layout"
+import { ProtectedRoute } from "./components/ProtectedRoute"
+import { Toaster } from "sonner"
+import { Register } from "./pages/Register"
+import { Dashboard } from "./pages/Dashboard"
+import { Categories } from "./pages/Categories"
 
 export function App() {
-  return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
+  const { loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="flex min-h-svh items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
       </div>
-    </div>
+    )
+  }
+
+  return (
+    <>
+      <Toaster richColors position="top-right" />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="categories" element={<Categories />} />
+        </Route>
+        
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </>
   )
 }
 
