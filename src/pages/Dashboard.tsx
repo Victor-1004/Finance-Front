@@ -32,6 +32,7 @@ export const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [balance, setBalance] = useState(0)
 
   const [amount, setAmount] = useState("")
   const [description, setDescription] = useState("")
@@ -40,16 +41,43 @@ export const Dashboard = () => {
   const [categoryId, setCategoryId] = useState("")
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(10)
+  const [filterInitialDate, setFilterInitialDate] = useState<string>("")
+  const [filterFinalDate, setFilterFinalDate] = useState<string>("")
   const fetchData = async () => {
     try {
       setIsLoading(true)
       setError(null)
-      const [txResponse, catResponse] = (await Promise.all([
-        api(`/transaction?page=${page}&size=${size}`),
-        api("/category/find")
-      ])) as [PaginatedResponse<Transaction>, Category[]]
+      
+      if (filterInitialDate && filterFinalDate) {
+        const initialDate = new Date(filterInitialDate)
+        const finalDate = new Date(filterFinalDate)
+        if (finalDate < initialDate) {
+          toast.error("Data final não pode ser anterior à data inicial")
+          setFilterInitialDate("")
+          setFilterFinalDate("")
+          setIsLoading(false)
+          return
+        }
+      }
+      
+      let transactionUrl = `/transaction?page=${page}&size=${size}`
+      if (filterInitialDate) transactionUrl += `&initialDate=${filterInitialDate}`
+      if (filterFinalDate) transactionUrl += `&finalDate=${filterFinalDate}`
+      
+      let balanceUrl = "/transaction/balance"
+      if (filterInitialDate) balanceUrl += `?initialDate=${filterInitialDate}`
+      if (filterFinalDate) balanceUrl += `${filterInitialDate ? '&' : '?'}finalDate=${filterFinalDate}`
+      
+      const [txResponse, catResponse, balanceResponse] = (await Promise.all([
+        api(transactionUrl),
+        api("/category/find"),
+        api(balanceUrl)
+      ])) as any[]
+      
+      
       setData(txResponse)
       setCategories(catResponse)
+      setBalance(balanceResponse?.balance || 0)
     } catch (err: any) {
       const errorMsg = err.message || "Erro ao carregar dados"
       setError(errorMsg)
@@ -61,8 +89,12 @@ export const Dashboard = () => {
   }
 
   useEffect(() => {
+    setPage(0)
+  }, [filterInitialDate, filterFinalDate])
+
+  useEffect(() => {
     fetchData()
-  }, [page, size])
+  }, [page, size, filterInitialDate, filterFinalDate])
 
   const handleCreateTransaction = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,7 +103,7 @@ export const Dashboard = () => {
       data: {
         amount: Number(amount),
         description,
-        date: new Date(date).toISOString(),
+        date,
         type,
         category_id: categoryId,
       }
@@ -114,7 +146,6 @@ export const Dashboard = () => {
 
   const income = data.content.filter(t => t.type === "income").reduce((acc, curr) => acc + Number(curr.amount), 0)
   const expense = data.content.filter(t => t.type === "expense").reduce((acc, curr) => acc + Number(curr.amount), 0)
-  const balance = income - expense
 
   // Organize data by date
   const sortedTransactions = [...data.content].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -244,6 +275,40 @@ export const Dashboard = () => {
 
       {!isLoading && !error && (
         <>
+          {/* Filter Period */}
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end">
+              <div className="space-y-2 flex-1">
+                <Label className="text-sm font-semibold">Data Inicial</Label>
+                <Input
+                  type="date"
+                  value={filterInitialDate}
+                  onChange={(e) => setFilterInitialDate(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+              <div className="space-y-2 flex-1">
+                <Label className="text-sm font-semibold">Data Final</Label>
+                <Input
+                  type="date"
+                  value={filterFinalDate}
+                  onChange={(e) => setFilterFinalDate(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+              <Button
+                onClick={() => {
+                  setFilterInitialDate("")
+                  setFilterFinalDate("")
+                }}
+                variant="outline"
+                className="h-10"
+              >
+                Limpar Filtro
+              </Button>
+            </div>
+          </div>
+
           {/* Stats Cards */}
           <div className="grid gap-4 md:grid-cols-3">
             {/* Balance Card */}
@@ -348,7 +413,7 @@ export const Dashboard = () => {
                             }`}
                         >
                           <TableCell className="font-medium text-sm">
-                            {new Date(tx.date).toLocaleDateString("pt-BR", { month: "2-digit", day: "2-digit" })}
+                            {tx.date.split("-").reverse().join("/")}
                           </TableCell>
                           <TableCell className="text-sm font-medium text-slate-900 dark:text-slate-100">
                             {tx.description}

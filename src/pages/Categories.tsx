@@ -45,7 +45,6 @@ export const Categories = () => {
         method: "POST",
         data: { name, is_default: false }
       })
-      console.log(response)
       if(response.status === 201) {
         toast.success("Categoria criada!")
         setIsDialogOpen(false)
