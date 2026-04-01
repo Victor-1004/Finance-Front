@@ -153,10 +153,10 @@ npm run preview
 
 ## 🔗 Variáveis de Ambiente
 
-Crie um arquivo `.env.local`:
+Crie um arquivo `.env`:
 
 ```
-VITE_API_URL=http://localhost:8080
+API_URL=http://localhost:8080
 ```
 
 ---
