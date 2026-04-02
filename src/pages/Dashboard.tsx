@@ -3,7 +3,7 @@ import { api } from "../lib/api"
 import type { Transaction, PaginatedResponse, Category } from "../types"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, ArrowUpCircle, ArrowDownCircle, DollarSign, Trash2, TrendingUp, ArrowLeft, ArrowLeftCircle, ArrowRightCircle, ArrowRight } from "lucide-react"
+import { PlusCircle, ArrowUpCircle, ArrowDownCircle, DollarSign, Trash2, TrendingUp, ArrowLeft, ArrowLeftCircle, ArrowRightCircle, ArrowRight, X } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -44,11 +44,12 @@ export const Dashboard = () => {
   const dateAtual = new Date()
   const [filterInitialDate, setFilterInitialDate] = useState<string>(Date.now() ? new Date(dateAtual.getFullYear(), dateAtual.getMonth(), 1).toISOString().split('T')[0] : "")
   const [filterFinalDate, setFilterFinalDate] = useState<string>(Date.now() ? new Date(dateAtual.getFullYear(), dateAtual.getMonth() + 1, 0).toISOString().split('T')[0] : "")
+  const [categoryFilter, setCategoryFilter] = useState<string>("")
   const fetchData = async () => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       if (filterInitialDate && filterFinalDate) {
         const initialDate = new Date(filterInitialDate)
         const finalDate = new Date(filterFinalDate)
@@ -60,22 +61,23 @@ export const Dashboard = () => {
           return
         }
       }
-      
+
       let transactionUrl = `/transaction?page=${page}&size=${size}`
       if (filterInitialDate) transactionUrl += `&initialDate=${filterInitialDate}`
       if (filterFinalDate) transactionUrl += `&finalDate=${filterFinalDate}`
-      
+      if (categoryFilter) transactionUrl += `&category=${categoryFilter}`
       let balanceUrl = "/transaction/balance"
       if (filterInitialDate) balanceUrl += `?initialDate=${filterInitialDate}`
       if (filterFinalDate) balanceUrl += `${filterInitialDate ? '&' : '?'}finalDate=${filterFinalDate}`
-      
+      if (categoryFilter) balanceUrl += `${filterInitialDate || filterFinalDate ? '&' : '?'}category=${categoryFilter}`
+
       const [txResponse, catResponse, balanceResponse] = (await Promise.all([
         api(transactionUrl),
         api("/category/find"),
         api(balanceUrl)
       ])) as any[]
-      
-      
+
+
       setData(txResponse)
       setCategories(catResponse)
       setBalance(balanceResponse?.balance || 0)
@@ -91,14 +93,25 @@ export const Dashboard = () => {
 
   useEffect(() => {
     setPage(0)
-  }, [filterInitialDate, filterFinalDate])
+  }, [filterInitialDate, filterFinalDate, categoryFilter])
 
   useEffect(() => {
     fetchData()
-  }, [page, size, filterInitialDate, filterFinalDate])
+  }, [page, size, filterInitialDate, filterFinalDate, categoryFilter])
 
   const handleCreateTransaction = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!categoryId) {
+      toast.error("Selecione uma categoria")
+      return
+    }
+    
+    if (!amount || !description) {
+      toast.error("Preencha todos os campos obrigatórios")
+      return
+    }
+    
     let response = await api("/transaction", {
       method: "POST",
       data: {
@@ -106,7 +119,7 @@ export const Dashboard = () => {
         description,
         date,
         type,
-        category_id: categoryId,
+        category: categoryId,
       }
     })
     if (response.status === 200 || response.status === 201) {
@@ -133,7 +146,7 @@ export const Dashboard = () => {
     } else {
       toast.error("Erro ao excluir transação")
     }
-      fetchData()
+    fetchData()
 
   }
 
@@ -233,8 +246,8 @@ export const Dashboard = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Categoria</Label>
-                  <Select required value={categoryId} onValueChange={setCategoryId}>
+                  <Label className="text-sm font-semibold">Categoria <span className="text-red-500">*</span></Label>
+                  <Select value={categoryId} onValueChange={setCategoryId}>
                     <SelectTrigger className="h-10">
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
@@ -297,16 +310,39 @@ export const Dashboard = () => {
                   className="h-10"
                 />
               </div>
+
               <Button
                 onClick={() => {
                   setFilterInitialDate("")
                   setFilterFinalDate("")
+                  setCategoryFilter("")
                 }}
                 variant="outline"
                 className="h-10"
               >
                 Limpar Filtro
               </Button>
+            </div>
+            <div className="space-y-2 flex-1 mt-6 flex flex-row items-center justify-start w-fit">
+              <div className="space-y-2 flex-1">
+                <Label className="text-sm font-semibold">Filtrar por Categoria</Label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="h-10" id="category-filter">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories && categories.length > 0 && categories.map(c => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+             <div className="mt-5">
+              <X className="h-5 w-5 text-muted-foreground cursor-pointer" onClick={() => setCategoryFilter("")} />
+             </div>
+             
             </div>
           </div>
 
@@ -317,7 +353,7 @@ export const Dashboard = () => {
               <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full -mr-8 -mt-8 group-hover:scale-110 transition-transform duration-300"></div>
               <CardContent className="pt-6 relative z-10">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm font-medium text-muted-foreground">Saldo Total</p>
+                  <p className="text-sm font-medium text-muted-foreground">Saldo no Período</p>
                   <div className="p-2.5 bg-blue-500/20 rounded-lg">
                     <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   </div>

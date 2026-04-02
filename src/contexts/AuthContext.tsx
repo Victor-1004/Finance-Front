@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import type { User } from "../types";
 import { useNavigate } from "react-router-dom";
+import { api } from "@/lib/api";
 
 interface AuthContextType {
   user: User | null;
@@ -19,8 +20,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
   useEffect(() => {
+    const initAuth = async () => {
+      const token = Cookies.get("token");
+      if (token) {
+        await fetchUser();
+      }
       setLoading(false);
+    };
+    initAuth();
   }, []);
+
+  const fetchUser = async () => {
+    try {
+      const response = await api("/get-user");
+      if (response.status === 200) {
+        setUser(response);
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+    }
+  };
+
 
   const login = async (token: string, user: User | null, redirectPath = "/") => {
     try {

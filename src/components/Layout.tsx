@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Link, Outlet, useLocation } from "react-router-dom"
-import { LogOut, Receipt, Moon, Sun, Laptop, LayoutDashboard, Tag } from "lucide-react"
+import { LogOut, Receipt, Moon, Sun, Laptop, LayoutDashboard, Tag, Target } from "lucide-react"
 import { useTheme } from "./theme-provider"
 
 export const Layout = () => {
@@ -67,6 +67,19 @@ export const Layout = () => {
               >
                 <Tag className="h-4 w-4" />
                 <span className="hidden sm:inline">Categorias</span>
+              </Button>
+            </Link>
+            <Link to="/dashboard/goals">
+              <Button
+                variant="ghost"
+                className={`gap-2 transition-all duration-200 ${
+                  isActive('/goals')
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Target className="h-4 w-4" />
+                <span className="hidden sm:inline">Objetivos</span>
               </Button>
             </Link>
           </nav>

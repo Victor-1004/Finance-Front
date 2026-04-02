@@ -16,10 +16,18 @@ export interface Transaction {
   createdAt?: string;
 }
 
-export interface User {
+export interface Goal {
   id: string;
   name: string;
-  email: string;
+  target_amount: number;
+  start_date: string;
+  deadline: string;
+  category: Category | null;
+  created_at: string;
+  progress?: number;
+  percentage?: number;
+  completed?: boolean;
+  expired?: boolean;
 }
 
 export interface PaginatedResponse<T> {
@@ -28,4 +36,10 @@ export interface PaginatedResponse<T> {
   total: number;
   content: T[];
   totalPages: number;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
 }

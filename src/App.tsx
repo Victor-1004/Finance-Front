@@ -8,6 +8,8 @@ import { Toaster } from "sonner"
 import { Register } from "./pages/Register"
 import { Dashboard } from "./pages/Dashboard"
 import { Categories } from "./pages/Categories"
+import { Goals } from "./pages/Goals"
+import { NotFound } from "./pages/NotFound.tsx"
 
 export function App() {
   const { loading } = useAuth()
@@ -37,9 +39,12 @@ export function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="categories" element={<Categories />} />
+          <Route path="goals" element={<Goals />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
         
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   )
